@@ -1,0 +1,23 @@
+#!/bin/bash
+name=readline
+version=8.0
+revision=0
+sources=(
+    "http://mirror.rit.edu/gnu/${name}/${name}-${version}.tar.gz"
+)
+depends=()
+
+
+function prepare() {
+    tar xf ${name}-${version}.tar.gz
+    cd ${name}-${version}
+}
+
+function build() {
+    ./configure --prefix=$prefix
+    make -j${maxjobs} SHLIB_LIBS=-lncurses
+}
+
+function package() {
+    make install DESTDIR="${destdir}"
+}
