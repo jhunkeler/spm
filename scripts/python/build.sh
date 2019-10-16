@@ -1,21 +1,22 @@
 #!/bin/bash
 name=python
-version=3.7.4
+version=3.7.5
 _basever=${version%.*}
 revision=0
 sources=(
     "https://www.python.org/ftp/python/${version}/Python-${version}.tar.xz"
 )
 depends=(
-    "tar-1.32-0.tar.gz"
-    "openssl-1.1.1d-0.tar.gz"
-    "libffi-3.2.1-0.tar.gz"
-    "grep-3.3-0.tar.gz"
-    "sed-4.7-0.tar.gz"
-    "sqlite-3.29.0-0.tar.gz"
-    "zlib-1.2.11-0.tar.gz"
-    "tcl-8.6.9-0.tar.gz"
-    "tk-8.6.9-0.tar.gz"
+    "bzip2-1.0"
+    "tar-1.32"
+    "openssl-1.1.1d"
+    "libffi-3.2"
+    "grep-3.3"
+    "readline-8"
+    "sed-4.7"
+    "sqlite-3.29"
+    "zlib-1.2"
+    "tk-8.6"
 )
 
 
