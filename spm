@@ -1,25 +1,4 @@
 #!/bin/bash
-TMPDIR=${TMPDIR:-/tmp}
-
-default_script=build.sh
-build_order=scripts/build.order
-
-build_scripts=$(cat ${build_order})
-
-# TODO: Make this part of MKTC
-SPM_PROG_RELOC=$HOME/Documents/work/reloc/reloc
-SPM_PREFIX_BIN=.SPM_PREFIX_BIN
-SPM_PREFIX_TEXT=.SPM_PREFIX_TEXT
-SPM_DEPENDS=.SPM_DEPENDS
-SPM_VERBOSE=0
-
-export prefix_placeholder=_0123456789_0123456789_0123456789_0123456789_0123456789_0123456789_0123456789_
-export prefix="/${prefix_placeholder}"
-export maxjobs=7
-export pkgdir=$(pwd)/pkgs
-mkdir -p ${pkgdir}
-source include/9999-template.sh
-
 
 function spm_abspath() {
     local filename="${1}"
@@ -35,6 +14,29 @@ function spm_abspath() {
 
     echo "${end}"
 }
+
+SPM_ORIGIN=$(dirname $(spm_abspath $0))
+TMPDIR=${TMPDIR:-/tmp}
+
+default_script=build.sh
+build_order=${SPM_ORIGIN}/scripts/build.order
+
+build_scripts=$(cat ${build_order})
+
+# TODO: Make this part of MKTC
+SPM_PROG_RELOC=$HOME/Documents/work/reloc/reloc
+SPM_PREFIX_BIN=.SPM_PREFIX_BIN
+SPM_PREFIX_TEXT=.SPM_PREFIX_TEXT
+SPM_DEPENDS=.SPM_DEPENDS
+SPM_VERBOSE=0
+
+export prefix_placeholder=_0123456789_0123456789_0123456789_0123456789_0123456789_0123456789_0123456789_
+export prefix="/${prefix_placeholder}"
+export maxjobs=7
+export pkgdir=${SPM_ORIGIN}/pkgs
+mkdir -p ${pkgdir}
+source ${SPM_ORIGIN}/include/9999-template.sh
+
 
 
 function spm_rpath_nearest() {
@@ -281,8 +283,12 @@ function spm_install() {
 
 function builder() {
     for build_script in ${build_scripts}; do
-        build_script=$(readlink -f scripts/$build_script/build.sh)
-        build_script_root=$(dirname ${build_script})
+        if [[ ! -f ${build_script} ]]; then
+            build_script=$(spm_abspath ${build_script}/build.sh)
+            build_script_root=$(dirname ${build_script})
+        else
+            build_script_root=$(spm_abspath ${build_script})
+        fi
         export build_root="${build_script_root}/buildroot"
         export build_runtime="${build_script_root}/runtime"
         export destdir="${build_script_root}/root"
@@ -331,7 +337,11 @@ function builder() {
 
             for dep in "${depends[@]}"; do
                 echo "Depends on: ${dep}"
-                pkg=$(basename $(pkg_match "${dep}"))
+                pkg=$(pkg_match "${dep}")
+                if [[ -z ${pkg} ]]; then
+                    echo "Package not found" >&2
+                    exit 1
+                fi
                 spm_install "${pkg}" "${build_runtime}"
             done
             hash -r
@@ -371,7 +381,7 @@ function pkg_match() {
         echo "pkg_match: missing argument, package" >&2
         exit 1
     fi
-    match=$(find "${pkgdir}" -type f -regex ".*/${1}\-?[0-9]+?.*" 2>/dev/null | sort | head -n 1)
+    match=$(find "${pkgdir}" -type f -regex ".*${1}\-?[0-9]+?.*" 2>/dev/null | sort | head -n 1)
     echo "${match}"
 }
 
