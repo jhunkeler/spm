@@ -5,6 +5,10 @@ revision=0
 sources=(
     "https://ftp.pcre.org/pub/${name}/${name}-${version}.tar.gz"
 )
+build_depends=(
+    "automake"
+    "autoconf"
+)
 depends=(
     "bzip2"
     "readline"
@@ -25,7 +29,7 @@ function build() {
         --enable-jit \
         --enable-pcregrep-libz \
         --enable-pcregrep-libbz2 \
-        --enable-pcretest-readline
+        --enable-pcretest-libreadline
     make -j${maxjobs}
 }
 

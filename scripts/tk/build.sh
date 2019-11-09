@@ -6,11 +6,12 @@ revision=0
 sources=(
     "https://prdownloads.sourceforge.net/tcl/${name}${version_full}-src.tar.gz"
 )
+build_depends=(
+    "tar"
+    "automake"
+)
 depends=(
-    "grep-3.3-0.tar.gz"
-    "sed-4.7-0.tar.gz"
-    "zlib-1.2.11-0.tar.gz"
-    "tcl-${version}-0.tar.gz"
+    "tcl-${version}"
 )
 
 function prepare() {
@@ -20,7 +21,7 @@ function prepare() {
 
 function build() {
     cd unix
-    ./configure --prefix=$prefix
+    ./configure --prefix=$prefix --with-tcl=${build_runtime}/lib
     make -j${maxjobs}
 }
 

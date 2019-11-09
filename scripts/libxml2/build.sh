@@ -1,10 +1,9 @@
 #!/bin/bash
-name=sqlite
-version=3.29.0
-_v=3290000
+name=libxml2
+version=2.9.9
 revision=0
 sources=(
-    "https://sqlite.org/2019/${name}-autoconf-${_v}.tar.gz"
+    "https://github.com/GNOME/${name}/archive/v${version}.tar.gz"
 )
 build_depends=(
     "automake"
@@ -12,14 +11,13 @@ build_depends=(
 )
 depends=()
 
-
 function prepare() {
-    tar xf ${name}-autoconf-${_v}.tar.gz
-    cd ${name}-autoconf-${_v}
+    tar xf v${version}.tar.gz
+    cd ${name}-${version}
 }
 
 function build() {
-    ./configure --prefix=$prefix
+    ./autogen.sh --prefix="${prefix}"
     make -j${maxjobs}
 }
 

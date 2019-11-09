@@ -1,4 +1,5 @@
 #!/bin/bash
+hash -r
 
 function spm_abspath() {
     local filename="${1}"
@@ -17,14 +18,16 @@ function spm_abspath() {
 
 SPM_ORIGIN=$(dirname $(spm_abspath $0))
 TMPDIR=${TMPDIR:-/tmp}
+OLD_PATH="${PATH}"
 
 default_script=build.sh
-build_order=${SPM_ORIGIN}/scripts/build.order
+build_order=${SPM_ORIGIN}/include/build.order
 
 build_scripts=$(cat ${build_order})
 
 # TODO: Make this part of MKTC
-SPM_PROG_RELOC=$HOME/Documents/work/reloc/reloc
+SPM_PROG_RELOC=reloc
+SPM_RELOC_COUNT=0
 SPM_PREFIX_BIN=.SPM_PREFIX_BIN
 SPM_PREFIX_TEXT=.SPM_PREFIX_TEXT
 SPM_DEPENDS=.SPM_DEPENDS
@@ -32,7 +35,7 @@ SPM_VERBOSE=0
 
 export prefix_placeholder=_0123456789_0123456789_0123456789_0123456789_0123456789_0123456789_0123456789_
 export prefix="/${prefix_placeholder}"
-export maxjobs=7
+export maxjobs=4
 export pkgdir=${SPM_ORIGIN}/pkgs
 mkdir -p ${pkgdir}
 source ${SPM_ORIGIN}/include/9999-template.sh
@@ -47,7 +50,7 @@ function spm_rpath_nearest() {
     # Jump to location of file
     cd "$(dirname ${start})"
 
-    # Scan upward until we find a "lib" directory
+    # Scan upward until we find a "lib" directory with shared libraries
     # OR when:
     # - Top of filesystem is reached (pretty much total failure [missing local dep])
     # - Top of active environment is reached (post installation)
@@ -56,8 +59,14 @@ function spm_rpath_nearest() {
     do
         result+="../"
         if [[ -d lib ]] || [[ $(pwd) == ${SPM_ENV} ]] || [[ $(pwd) == *${prefix} ]]; then
-            result+="lib"
-            break
+            lib_count=$(find . -type f \( -name '*.so' -o -name '*.dylib' \) | wc -l)
+            if (( lib_count )); then
+                result+="lib"
+                break
+            elif [[ $(pwd) == *${prefix} ]] && [[ ! -d lib ]]; then
+                result+="lib"
+                break;
+            fi
         fi
         cd ..
     done
@@ -129,7 +138,7 @@ function spm_gen_package_prefixes() {
                 (( count_bin++ ))
             fi
 
-            echo "#${prefix}" >> "${outfile}"
+            echo "#${pkg_prefix}" >> "${outfile}"
             echo "${path}" >> "${outfile}"
 
         done
@@ -187,10 +196,7 @@ function spm_install() {
             while read path; do
                 if [[ -z $path ]]; then
                     continue
-                elif [[ $path =~ ^# ]]; then
-                    if [[ -z $path ]]; then
-                        continue;
-                    fi
+                elif [[ $path =~ ^#.* ]]; then
                     prefix_base="${path#\#}"
                     continue
                 fi
@@ -200,14 +206,15 @@ function spm_install() {
                     continue
                 fi
 
+                if [[ $path =~ .pyc$ ]]; then
+                    continue
+                fi
+
                 if (( $SPM_VERBOSE )); then
-                    if [[ $path =~ .pyc$ ]]; then
-                        continue
-                    fi
                     echo "Relocating binary paths: ${path}"
                 fi
-                ${SPM_PROG_RELOC} "${prefix_base}" "${destroot}" "${path}" 1>/dev/null
-            done <<< $(cat "${SPM_PREFIX_BIN}")
+                ${SPM_PROG_RELOC} "${prefix_base}" "${destroot}" "${path}" "${path}" >/dev/null
+            done < "${SPM_PREFIX_BIN}"
             rm -f ${SPM_PREFIX_BIN}
         fi
         prefix_base=""
@@ -218,9 +225,6 @@ function spm_install() {
                 if [[ -z $path ]]; then
                     continue
                 elif [[ $path =~ ^# ]]; then
-                    if [[ -z $path ]]; then
-                        continue;
-                    fi
                     prefix_base="${path#\#}"
                     continue
                 fi
@@ -229,14 +233,16 @@ function spm_install() {
                     echo "WARNING: ${path} does not exist!" >&2
                     continue
                 fi
+
+                if [[ $path =~ .pyc$ ]]; then
+                    continue
+                fi
+
                 if (( $SPM_VERBOSE )); then
-                    if [[ $path =~ .pyc$ ]]; then
-                        continue
-                    fi
                     echo "Relocating text paths: ${path}"
                 fi
                 sed -i -e "s|${prefix_base}|${destroot}|g" "${path}"
-            done <<< $(cat "${SPM_PREFIX_TEXT}")
+            done < "${SPM_PREFIX_TEXT}"
             rm -f ${SPM_PREFIX_TEXT}
         fi
 
@@ -283,15 +289,21 @@ function spm_install() {
 
 function builder() {
     for build_script in ${build_scripts}; do
+        if [[ ${build_script} =~ ^#.* ]]; then
+            continue
+        fi
         if [[ ! -f ${build_script} ]]; then
             build_script=$(spm_abspath ${build_script}/build.sh)
             build_script_root=$(dirname ${build_script})
         else
             build_script_root=$(spm_abspath ${build_script})
         fi
-        export build_root="${build_script_root}/buildroot"
-        export build_runtime="${build_script_root}/runtime"
-        export destdir="${build_script_root}/root"
+
+        local output_dir="${SPM_ORIGIN}/output/$(basename ${build_script_root})"
+        export build_sources="${SPM_ORIGIN}/sources/$(basename ${build_script_root})"
+        export build_root="${output_dir}/buildroot"
+        export build_runtime="${output_dir}/runtime"
+        export destdir="${output_dir}/root"
 
         export CC=gcc
         export CXX=g++
@@ -305,6 +317,10 @@ function builder() {
         if [[ ! -f ${build_script} ]]; then
             echo "${build_script} does not exist, check ${build_order}" >&2
             exit 1
+        fi
+
+        if [[ ! -d ${build_sources} ]]; then
+            mkdir -p ${build_sources}
         fi
 
         if [[ -d ${build_root} ]]; then
@@ -322,19 +338,57 @@ function builder() {
         fi
         mkdir -p ${destdir}
 
-        export PATH="${build_runtime}/bin:${build_runtime}/sbin:$PATH"
+        export PATH="${build_runtime}/bin:${build_runtime}/sbin:$OLD_PATH"
         export PKG_CONFIG_PATH="${build_runtime}/lib/pkgconfig"
 
         pushd ${build_root} &>/dev/null
+            # Assimilate build script's contents
             source ${build_script}
+
+            if [[ -f ${pkgdir}/${name}-${version}-${revision}.tar.gz ]]; then
+                echo "Skipping: Package exists"
+                popd &>/dev/null
+                continue
+            fi
+
+            # Download source files
             for url in "${sources[@]}"; do
-                if [[ -f $(basename $url) ]]; then
+                archive_path="${build_sources}/$(basename $url)"
+                if [[ -f ${archive_path} ]]; then
+                    echo "Cached source: ${archive_path}"
                     continue
                 fi
                 echo "Downloading source: ${url}"
-                curl -LO $url
+                curl -L "$url" > "${archive_path}"
             done
 
+            # Copy source files to build root
+            for archive in "${build_sources}"/*; do
+                echo "Copying source to build root: ${archive}"
+                cp -a "${archive}" "${build_root}"
+            done
+
+            # Make base package implicit
+            if [[ -z $disable_base ]]; then
+                base_package=$(pkg_match "base")
+                if [[ -n ${base_package} ]]; then
+                    build_depends+=(${base_package})
+                    depends+=(${base_package})
+                fi
+            fi
+
+            # Install build dependencies
+            for dep in "${build_depends[@]}"; do
+                echo "Build depends on: ${dep}"
+                pkg=$(pkg_match "${dep}")
+                if [[ -z ${pkg} ]]; then
+                    echo "Package not found" >&2
+                    exit 1
+                fi
+                spm_install "${pkg}" "${build_runtime}"
+            done
+
+            # Install package dependencies
             for dep in "${depends[@]}"; do
                 echo "Depends on: ${dep}"
                 pkg=$(pkg_match "${dep}")
@@ -344,14 +398,18 @@ function builder() {
                 fi
                 spm_install "${pkg}" "${build_runtime}"
             done
+
+            # Rehash the runtime environment
             hash -r
 
+            # No failures allowed in predefined build stages
             set -e
             prepare
             build
             package
             set +e
 
+            # Post-process the installation root (i.e. make install DESTDIR=${destdir})
             if [[ -d ${destdir} ]]; then
                 pushd ${destdir} &>/dev/null
                     if [[ -d ${destdir}/${prefix} ]]; then

@@ -1,21 +1,15 @@
 #!/bin/bash
-name=diffutils
-version=3.7
+name=gettext
+version=0.20.1
 revision=0
 sources=(
-    "http://mirror.rit.edu/gnu/${name}/${name}-${version}.tar.xz"
+    "http://mirror.rit.edu/gnu/${name}/${name}-${version}.tar.gz"
 )
-build_depends=(
-    "automake"
-    "autoconf"
-    "xz"
-)
-depends=(
-)
-
+build_depends=()
+depends=()
 
 function prepare() {
-    tar xf ${name}-${version}.tar.xz
+    tar xf ${name}-${version}.tar.gz
     cd ${name}-${version}
 }
 

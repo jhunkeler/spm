@@ -5,7 +5,13 @@ revision=0
 sources=(
     "https://ftp.gnu.org/gnu/${name}/${name}-${version}.tar.xz"
 )
-depends=()
+build_depends=(
+    "automake"
+    "autoconf"
+    "xz"
+)
+depends=(
+)
 
 
 function prepare() {

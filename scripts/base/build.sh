@@ -3,28 +3,32 @@ name=base
 version=1.0.0
 revision=0
 sources=()
+build_depends=()
 depends=(
     # development tools
-    "autoconf"
-    "automake"
-    "m4"
+    #"autoconf"
+    #"automake"
+    #"binutils"
+    "gcc"
+    #"m4"
     # file manipulation
-    "diffutils"
-    "findutils"
-    "grep"
-    "sed"
+    #"diffutils"
+    #"findutils"
+    #"grep"
+    #"sed"
+    #"patch"
     # archivers
-    "tar"
+    #"tar"
     # compression
-    "bzip2"
-    "gzip"
-    "xz"
-    "zlib"
+    #"bzip2"
+    #"gzip"
+    #"xz"
+    #"zlib"
     # terminal
-    "ncurses"
-    "readline"
+    #"ncurses"
+    #"readline"
     # web
-    "curl"
+    #"curl"
 )
 
 function prepare() {
@@ -42,6 +46,7 @@ function package() {
         etc
         lib
         libexec
+        opt
         sbin
         tmp
         var/cache
@@ -62,6 +67,8 @@ function package() {
             mkdir -p "${d}"
             chmod 0755 "${d}"
         done
+        chmod 1777 tmp
+        chmod 1777 var/tmp
         ln -sf lib lib64
     popd
 

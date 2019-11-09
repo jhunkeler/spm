@@ -5,12 +5,12 @@ revision=0
 sources=(
     "https://prdownloads.sourceforge.net/${name}/${name}${version}-src.tar.gz"
 )
+build_depends=(
+    "automake"
+    "autoconf"
+)
 depends=(
-    "bzip2-1.0.8-0.tar.gz"
-    "grep-3.3-0.tar.gz"
-    "sed-4.7-0.tar.gz"
     "pcre-8.43-0.tar.gz"
-    "zlib-1.2.11-0.tar.gz"
 )
 
 function prepare() {

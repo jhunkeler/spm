@@ -1,24 +1,28 @@
 #!/bin/bash
-name=sqlite
-version=3.29.0
-_v=3290000
+name=git
+version=2.24.0
 revision=0
 sources=(
-    "https://sqlite.org/2019/${name}-autoconf-${_v}.tar.gz"
+    "https://github.com/${name}/${name}/archive/v${version}.tar.gz"
 )
 build_depends=(
     "automake"
-    "autoconf"
+    "gettext"
+    "libtool"
 )
-depends=()
+depends=(
+    "curl"
+    "zlib"
+)
 
 
 function prepare() {
-    tar xf ${name}-autoconf-${_v}.tar.gz
-    cd ${name}-autoconf-${_v}
+    tar xf v${version}.tar.gz
+    cd ${name}-${version}
 }
 
 function build() {
+    make configure
     ./configure --prefix=$prefix
     make -j${maxjobs}
 }
@@ -26,3 +30,5 @@ function build() {
 function package() {
     make install DESTDIR="${destdir}"
 }
+
+

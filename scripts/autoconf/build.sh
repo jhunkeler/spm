@@ -6,7 +6,8 @@ sources=(
     "http://mirror.rit.edu/gnu/${name}/${name}-${version}.tar.xz"
 )
 depends=(
-    "m4-1.4.18-0.tar.gz"
+    "m4"
+    "xz"
 )
 
 

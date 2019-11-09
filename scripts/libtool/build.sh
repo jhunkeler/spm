@@ -1,12 +1,12 @@
 #!/bin/bash
-name=gzip
-version=1.10
+name=libtool
+version=2.4.6
 revision=0
 sources=(
-    "http://mirror.rit.edu/gnu/${name}/${name}-${version}.tar.gz"
+    "http://ftp.gnu.org/gnu/${name}/${name}-${version}.tar.gz"
 )
-build_depends=()
 depends=()
+
 
 function prepare() {
     tar xf ${name}-${version}.tar.gz
@@ -14,7 +14,7 @@ function prepare() {
 }
 
 function build() {
-    ./configure --prefix=$prefix
+    ./configure --prefix="${prefix}"
     make -j${maxjobs}
 }
 

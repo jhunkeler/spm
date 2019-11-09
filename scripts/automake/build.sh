@@ -1,6 +1,6 @@
 #!/bin/bash
 name=automake
-version=1.16
+version=1.16.1
 revision=0
 sources=(
     "http://mirror.rit.edu/gnu/${name}/${name}-${version}.tar.xz"

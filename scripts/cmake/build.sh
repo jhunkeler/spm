@@ -1,12 +1,12 @@
 #!/bin/bash
-name=gzip
-version=1.10
+name=cmake
+version=3.15.5
 revision=0
 sources=(
-    "http://mirror.rit.edu/gnu/${name}/${name}-${version}.tar.gz"
+    "https://github.com/Kitware/CMake/releases/download/v${version}/${name}-${version}.tar.gz"
 )
-build_depends=()
 depends=()
+
 
 function prepare() {
     tar xf ${name}-${version}.tar.gz
@@ -14,10 +14,12 @@ function prepare() {
 }
 
 function build() {
-    ./configure --prefix=$prefix
+    ./bootstrap --prefix="${prefix}"
     make -j${maxjobs}
 }
 
 function package() {
     make install DESTDIR="${destdir}"
 }
+
+

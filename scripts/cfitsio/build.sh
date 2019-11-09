@@ -1,21 +1,15 @@
 #!/bin/bash
-name=diffutils
-version=3.7
+name=cfitsio
+version=3.47
 revision=0
 sources=(
-    "http://mirror.rit.edu/gnu/${name}/${name}-${version}.tar.xz"
+    "http://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/${name}-${version}.tar.gz"
 )
-build_depends=(
-    "automake"
-    "autoconf"
-    "xz"
-)
-depends=(
-)
+depends=("curl")
 
 
 function prepare() {
-    tar xf ${name}-${version}.tar.xz
+    tar xf ${name}-${version}.tar.gz
     cd ${name}-${version}
 }
 
@@ -27,3 +21,5 @@ function build() {
 function package() {
     make install DESTDIR="${destdir}"
 }
+
+

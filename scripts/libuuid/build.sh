@@ -6,7 +6,14 @@ sources=(
     "https://mirrors.edge.kernel.org/pub/linux/utils/util-linux/v2.34/util-linux-2.34.tar.xz"
     "https://mirrors.edge.kernel.org/pub/linux/utils/util-linux/v${version}/util-linux-${version}.tar.xz"
 )
-depends=()
+build_depends=(
+    "automake"
+    "autoconf"
+    "xz"
+)
+depends=(
+    "base"
+)
 
 
 function prepare() {

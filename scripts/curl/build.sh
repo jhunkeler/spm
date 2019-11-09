@@ -5,9 +5,15 @@ revision=0
 sources=(
     "https://curl.haxx.se/download/${name}-${version}.tar.xz"
 )
+build_depends=(
+    "tar"
+    "xz"
+    "autoconf"
+    "automake"
+)
 depends=(
-    "libffi-3.2.1-0.tar.gz"
-    "openssl-1.1.1d-0.tar.gz"
+    "libffi-3.2.1"
+    "openssl-1.1.1d"
 )
 
 

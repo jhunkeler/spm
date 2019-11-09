@@ -5,10 +5,7 @@ revision=0
 sources=(
     "https://tukaani.org/xz/${name}-${version}.tar.gz"
 )
-depends=(
-    "sed-4.7-0.tar.gz"
-    "grep-3.3-0.tar.gz"
-)
+depends=()
 
 
 function prepare() {

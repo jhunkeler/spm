@@ -1,29 +1,27 @@
 #!/bin/bash
-name=diffutils
-version=3.7
+name=patchelf
+version=0.10
 revision=0
-sources=(
-    "http://mirror.rit.edu/gnu/${name}/${name}-${version}.tar.xz"
-)
+sources=("https://github.com/NixOS/${name}/archive/${version}.tar.gz")
 build_depends=(
     "automake"
     "autoconf"
-    "xz"
 )
-depends=(
-)
-
+depends=()
 
 function prepare() {
-    tar xf ${name}-${version}.tar.xz
+    tar xf ${version}.tar.gz
     cd ${name}-${version}
 }
 
 function build() {
-    ./configure --prefix=$prefix
+    ./bootstrap.sh
+    ./configure --prefix="${prefix}"
     make -j${maxjobs}
 }
 
 function package() {
     make install DESTDIR="${destdir}"
 }
+
+

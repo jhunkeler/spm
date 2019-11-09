@@ -5,6 +5,11 @@ revision=0
 sources=(
     "http://mirror.rit.edu/gnu/${name}/${name}-${version}.tar.xz"
 )
+build_depends=(
+    "automake"
+    "autoconf"
+    "xz"
+)
 depends=()
 
 

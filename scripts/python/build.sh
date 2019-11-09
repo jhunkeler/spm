@@ -6,17 +6,25 @@ revision=0
 sources=(
     "https://www.python.org/ftp/python/${version}/Python-${version}.tar.xz"
 )
+build_depends=(
+    "sed-4.7"
+    "grep-3.3"
+    "automake"
+    "autoconf"
+    "xz"
+)
 depends=(
     "bzip2-1.0"
-    "tar-1.32"
-    "openssl-1.1.1d"
+    "gdbm"
+    "libexpat"
     "libffi-3.2"
-    "grep-3.3"
+    "ncurses-6"
+    "openssl-1.1.1d"
+    "tar-1.32"
     "readline-8"
-    "sed-4.7"
     "sqlite-3.29"
-    "zlib-1.2"
     "tk-8.6"
+    "zlib-1.2"
 )
 
 
@@ -26,21 +34,19 @@ function prepare() {
 }
 
 function build() {
+    #zlib="zlib zlibmodule.c ${CFLAGS} ${LDFLAGS} -lz"
+    #echo "${zlib/=/ }" >> Modules/Setup
 
-    zlib="zlib zlibmodule.c ${CFLAGS} ${LDFLAGS} -lz"
-    echo "${zlib/=/ } >> Modules/Setup"
-
+    export CFLAGS="${CFLAGS} -I${build_runtime}/include/ncursesw"
     ./configure \
         --prefix="${prefix}" \
         --enable-ipv6 \
         --enable-loadable-sqlite-extensions \
         --enable-shared \
         --with-computed-gotos \
-        --with-lto \
         --with-dbmliborder=gdbm:ndbm \
         --with-pymalloc \
         --with-system-expat \
-        --with-system-ffi \
         --without-ensurepip
     make -j${maxjobs}
 }
