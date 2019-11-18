@@ -43,6 +43,7 @@ source ${SPM_ORIGIN}/include/9999-template.sh
 
 
 function spm_rpath_nearest() {
+    set -x
     local cwd="$(pwd)"
     local start=$(dirname $(spm_abspath ${1}))
     local result=
