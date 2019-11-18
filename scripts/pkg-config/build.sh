@@ -1,24 +1,22 @@
 #!/bin/bash
-disable_base=1
-name=patchelf
-version=0.10
+name=pkg-config
+version=0.29.2
 revision=0
-sources=("https://github.com/NixOS/${name}/archive/${version}.tar.gz")
+sources=(
+    "https://pkg-config.freedesktop.org/releases/${name}-${version}.tar.gz"
+)
 build_depends=(
-    "autoconf"
     "automake"
-    "gcc"
-    "binutils"
+    "autoconf"
 )
 depends=()
 
 function prepare() {
-    tar xf ${version}.tar.gz
+    tar xf ${name}-${version}.tar.gz
     cd ${name}-${version}
 }
 
 function build() {
-    ./bootstrap.sh
     ./configure --prefix="${prefix}"
     make -j${maxjobs}
 }

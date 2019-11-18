@@ -9,6 +9,7 @@ depends=(
     "m4"
     "xz"
 )
+build_depends=("${depends[@]}")
 
 
 function prepare() {

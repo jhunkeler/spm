@@ -1,20 +1,19 @@
 #!/bin/bash
-name=sed
-version=4.7
+name=util-linux
+version=2.34
 revision=0
 sources=(
-    "http://mirror.rit.edu/gnu/${name}/${name}-${version}.tar.xz"
-)
-build_depends=(
-    "xz"
+    "https://mirrors.edge.kernel.org/pub/linux/utils/${name}/v${version}/${name}-${version}.tar.gz"
 )
 depends=(
-    "grep"
+    "autoconf"
+    "automake"
+    "libtool"
 )
 
 
 function prepare() {
-    tar xf ${name}-${version}.tar.xz
+    tar xf ${name}-${version}.tar.gz
     cd ${name}-${version}
 }
 
@@ -26,3 +25,5 @@ function build() {
 function package() {
     make install DESTDIR="${destdir}"
 }
+
+

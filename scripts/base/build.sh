@@ -3,12 +3,11 @@ name=base
 version=1.0.0
 revision=0
 sources=()
-build_depends=()
 depends=(
     # development tools
     #"autoconf"
     #"automake"
-    #"binutils"
+    "binutils"
     "gcc"
     #"m4"
     # file manipulation
@@ -17,6 +16,7 @@ depends=(
     #"grep"
     #"sed"
     #"patch"
+    "patchelf"
     # archivers
     #"tar"
     # compression

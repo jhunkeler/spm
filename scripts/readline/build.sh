@@ -8,6 +8,7 @@ sources=(
 build_depends=(
     "automake"
     "autoconf"
+    "ncurses"
 )
 depends=(
     "ncurses"

@@ -8,6 +8,8 @@ sources=(
 build_depends=(
     "automake"
     "autoconf"
+    "readline"
+    "zlib"
 )
 depends=(
     "bzip2"

@@ -8,8 +8,11 @@ sources=(
 build_depends=(
     "automake"
     "autoconf"
+    "libtool"
 )
-depends=()
+depends=(
+    "icu"
+)
 
 function prepare() {
     tar xf v${version}.tar.gz
@@ -17,7 +20,8 @@ function prepare() {
 }
 
 function build() {
-    ./autogen.sh --prefix="${prefix}"
+    sh autogen.sh
+    ./configure --prefix="${prefix}"
     make -j${maxjobs}
 }
 

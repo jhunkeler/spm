@@ -6,6 +6,7 @@ sources=(
     "https://github.com/${name}/${name}/archive/R_${version//./_}.tar.gz"
 )
 build_depends=(
+    "autoconf"
     "automake"
     "libtool"
 )

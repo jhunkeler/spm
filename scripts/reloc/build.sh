@@ -1,30 +1,27 @@
 #!/bin/bash
-disable_base=1
-name=patchelf
-version=0.10
+name=reloc
+version=1.0.0
 revision=0
-sources=("https://github.com/NixOS/${name}/archive/${version}.tar.gz")
+sources=(
+    "https://github.com/jhunkeler/${name}/archive/${version}.tar.gz"
+)
 build_depends=(
-    "autoconf"
-    "automake"
-    "gcc"
-    "binutils"
+    "cmake"
 )
 depends=()
 
 function prepare() {
     tar xf ${version}.tar.gz
     cd ${name}-${version}
+    mkdir -p build
+    cd build
 }
 
 function build() {
-    ./bootstrap.sh
-    ./configure --prefix="${prefix}"
+    cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="${prefix}"
     make -j${maxjobs}
 }
 
 function package() {
     make install DESTDIR="${destdir}"
 }
-
-

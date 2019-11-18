@@ -21,7 +21,7 @@ RUN curl -L https://github.com/jhunkeler/reloc/archive/master.tar.gz | tar zxf -
 	&& cd reloc-* \
 	&& mkdir -p build \
 	&& cd build \
-	&& cmake .. -DCMAKE_INSTALL_PREFIX=/usr \
+	&& cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
 	&& make \
 	&& make install \
 	&& cd /build

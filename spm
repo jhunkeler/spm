@@ -46,6 +46,17 @@ function spm_rpath_nearest() {
     local cwd="$(pwd)"
     local start=$(dirname $(spm_abspath ${1}))
     local result=
+    local lib_forced=0
+    local install_root="${destdir}/${prefix_placeholder}"
+
+    # Determine if package produced its own "lib" directory. If not, generate a symlink
+    # pointing back to the build's runtime environment.
+    if [[ ! -d ${install_root}/lib ]] && [[ ! -L ${install_root}/lib ]]; then
+        pushd "${install_root}" &>/dev/null
+            ln -sf "${build_runtime}"/lib
+        popd &>/dev/null
+        lib_forced=1
+    fi
 
     # Jump to location of file
     cd "$(dirname ${start})"
@@ -58,18 +69,24 @@ function spm_rpath_nearest() {
     while [[ $(pwd) != / ]]
     do
         result+="../"
-        if [[ -d lib ]] || [[ $(pwd) == ${SPM_ENV} ]] || [[ $(pwd) == *${prefix} ]]; then
-            lib_count=$(find . -type f \( -name '*.so' -o -name '*.dylib' \) | wc -l)
-            if (( lib_count )); then
-                result+="lib"
-                break
-            elif [[ $(pwd) == *${prefix} ]] && [[ ! -d lib ]]; then
-                result+="lib"
-                break;
+        if [[ -d $(pwd)/lib/ ]]; then
+            # There are edge cases when the lib directory one level above an executable
+            # doesn't contain any shared libraries (i.e. binutils)
+            if (( ! $(find . -type f -name "*.so" 2>/dev/null | wc -l) )); then
+                cd ..
+                continue
             fi
+            result+="lib"
+            break
         fi
         cd ..
     done
+
+    # If we created a symlink to the runtime environment, remove it
+    if (( $lib_forced > 0)); then
+        rm -f "${install_root}/lib"
+        lib_forced=0
+    fi
 
     # Sanitize: removing double-slashes (if any)
     result=${result/\/\//\/}
@@ -85,14 +102,17 @@ function spm_gen_package_rpath() {
     local rpath_new
 
     # Assimilate all file paths that contain an RPATH
-    for path in $(find . -type f -not -name '.SPM-*')
+    for path in $(find . -type f -not -name '.SPM_*')
     do
-        readelf -d "${path}" 2>/dev/null | grep RPATH &>/dev/null
+        readelf -d "${path}" 2>/dev/null | grep 'R.\?.\?PATH' &>/dev/null
         if (( $? )); then
             continue
         fi
-        rpath_orig="$(readelf -d "${path}" | grep RPATH | awk -F'[][]' '{ print $2 }')"
+        rpath_orig="$(readelf -d "${path}" | grep 'R.\?.\?PATH' | awk -F'[][]' '{ print $2 }')"
         rpath_new='$ORIGIN/'"$(spm_rpath_nearest ${path})"
+        if [[ ${rpath_origin} == ${rpath_new} ]]; then
+            continue
+        fi
         echo "${path}: ${rpath_orig} -> ${rpath_new}"
         patchelf --set-rpath "${rpath_new}" "${path}"
     done
@@ -256,7 +276,7 @@ function spm_install() {
 
             for dep in "${_spm_install_depends[@]}"; do
                 # Track dependencies we have already processed to avoid infinite recursion
-                if [[ "${_spm_install_seen[@]}" =~ "$dep" ]]; then
+                if [[ ${_spm_install_seen[@]} =~ $dep ]]; then
                     # Pop dependency and do nothing
                     _spm_install_depends=("${_spm_install_depends[@]:1}")
                     continue
@@ -267,12 +287,23 @@ function spm_install() {
 
                 # Stop processing when the array is totally empty
                 if (( ${#_spm_install_depends[@]} < 0 )); then
+                    _spm_install_depends=()
+                    #_spm_install_seen=()
                     break
                 fi
 
                 _spm_install_seen+=("${dep}")
                 spm_install "${dep}" "${destroot}"
             done
+
+            #FIXME
+            #local prev
+            #for rec in "${_spm_install_depends[@]}"; do prev="$rec $prev"; done
+            #_spm_install_depends=($x)
+
+            #for dep in "${_spm_install_depends[@]}"; do
+            #    spm_install "${dep}" "${destroot}"
+            #done
             rm -f "${SPM_DEPENDS}"
         fi
 
@@ -372,6 +403,8 @@ function builder() {
             if [[ -z $disable_base ]]; then
                 base_package=$(pkg_match "base")
                 if [[ -n ${base_package} ]]; then
+                    # pkg_match returns a path, so just use "base" instead if its there
+                    base_package="base"
                     build_depends+=(${base_package})
                     depends+=(${base_package})
                 fi

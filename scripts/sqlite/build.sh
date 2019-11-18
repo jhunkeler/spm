@@ -9,8 +9,13 @@ sources=(
 build_depends=(
     "automake"
     "autoconf"
+    "readline"
+    "zlib"
 )
-depends=()
+depends=(
+    "readline"
+    "zlib"
+)
 
 
 function prepare() {

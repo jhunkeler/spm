@@ -9,16 +9,15 @@ build_depends=(
     "automake"
     "autoconf"
     "patch"
+    "python"
 )
-depends=(
-    "base"
-)
+depends=()
+
 
 function prepare() {
     tar xf ${name}4c-${version//./_}-src.tgz
     cd ${name}/source
-    patch -p0 -i "${build_script_root}/0001-disable-tests.patch"
-    autoreconf -i -f
+    #patch -p0 -i "${build_script_root}/0001-disable-tests.patch"
 }
 
 function build() {

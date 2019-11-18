@@ -4,6 +4,7 @@ version=19.2.3
 revision=0
 sources=(https://github.com/pypa/${name/python-/}/archive/${version}.tar.gz)
 depends=(
+    'git'
     'python-3'
     'python-setuptools'
 )

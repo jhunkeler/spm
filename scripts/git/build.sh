@@ -6,12 +6,21 @@ sources=(
     "https://github.com/${name}/${name}/archive/v${version}.tar.gz"
 )
 build_depends=(
+    "autoconf"
     "automake"
+    "curl"
     "gettext"
     "libtool"
+    "openssl"
+    "pcre"
+    "tk"
+    "zlib"
 )
 depends=(
     "curl"
+    "openssl"
+    "pcre"
+    "tk"
     "zlib"
 )
 
@@ -22,8 +31,13 @@ function prepare() {
 }
 
 function build() {
+    export LDFLAGS="${LDFLAGS} -Wl,-rpath=${prefix}/lib"
     make configure
-    ./configure --prefix=$prefix
+    ./configure --prefix=$prefix \
+        --libdir=$prefix/lib \
+        --with-curl \
+        --with-expat \
+        --with-tcltk
     make -j${maxjobs}
 }
 
