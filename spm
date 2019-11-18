@@ -50,10 +50,15 @@ function spm_rpath_nearest() {
     local install_root="${destdir}/${prefix_placeholder}"
 
     # Determine if package produced its own "lib" directory. If not, generate a symlink
-    # pointing back to the build's runtime environment.
+    # pointing back to the build's runtime environment, or create a placeholder.
     if [[ ! -d ${install_root}/lib ]] && [[ ! -L ${install_root}/lib ]]; then
         pushd "${install_root}" &>/dev/null
-            ln -sf "${build_runtime}"/lib
+            if [[ -d ${build_runtime}/lib ]]; then
+                ln -sf "${build_runtime}"/lib
+            else
+                mkdir -p "${install_root}"/lib
+            fi
+
         popd &>/dev/null
         lib_forced=1
     fi
@@ -69,14 +74,21 @@ function spm_rpath_nearest() {
     while [[ $(pwd) != / ]]
     do
         result+="../"
+        echo "spm_rpath_nearest(): @ $(pwd)" >&2
         if [[ -d $(pwd)/lib/ ]]; then
+
+            echo "spm_rpath_nearest(): found lib directory" >&2
             # There are edge cases when the lib directory one level above an executable
             # doesn't contain any shared libraries (i.e. binutils)
-            if (( ! $(find . -type f -name "*.so" 2>/dev/null | wc -l) )); then
+            if (( ! $(find $(pwd)/lib/ -type f \
+                \( -name "*.so" -o -name "*.dylib" -o -name "*.a" \) \
+                2>/dev/null | wc -l) )); then
                 cd ..
+                echo "spm_rpath_nearest(): lib directory was not useful" >&2
                 continue
             fi
             result+="lib"
+            echo "spm_rpath_nearest(): lib directory was useful" >&2
             break
         fi
         cd ..
