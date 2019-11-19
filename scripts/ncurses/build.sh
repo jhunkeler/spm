@@ -57,6 +57,6 @@ function package() {
     ln -s libncurses.so "${destdir}/${prefix}/lib/libcurses.so"
 
     # some packages include from ncurses/
-    ln -s ncurses "${destdir}/${prefix}/include/ncursesw"
+    ln -s ncursesw "${destdir}/${prefix}/include/ncurses"
 
 }
