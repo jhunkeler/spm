@@ -15,7 +15,9 @@ build_depends=(
 )
 depends=(
     "bzip2-1.0"
+    "e2fsprogs"
     "gdbm"
+    "gzip"
     "libexpat"
     "libffi-3.2"
     "ncurses-6"
